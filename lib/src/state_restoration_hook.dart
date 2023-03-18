@@ -1,7 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:state_restoration_hook/src/hook_restorable_properties.dart';
+import 'package:state_restoration_hook/src/restorable_property_hook.dart';
 
-/// Manages an object of type `T`, whose value a [State] object wants to have
+/// Manages an object of type `T`, whose value a [HookWidget] wants to have
 /// restored during state restoration.
 ///
 /// The property wraps an object of type `T`. It knows how to store its value in
@@ -56,13 +58,12 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 /// the newly provided value.
 ///
 /// In a typical use case, a subclass of [HookRestorableProperty] is instantiated
-/// either to initialize a member variable of a [State] object or within
-/// [State.initState]. It is then registered to a [RestorationMixin] in
-/// [RestorationMixin.restoreState] and later [dispose]ed in [State.dispose].
+/// using the [useRestorableProperty] hook. It is then registered using the [useStateRestoration] hook.
 /// For less common use cases (e.g. if the value stored in a
 /// [HookRestorableProperty] is only needed while the [State] object is in a certain
-/// state), a [HookRestorableProperty] may be registered with a [RestorationMixin]
-/// any time after [RestorationMixin.restoreState] has been called for the first
+/// state), a [HookRestorableProperty] may be registered using the returned [registerForRestoration]
+/// function from the [useStateRestoration] hook
+/// any time after [useStateRestoration] hook has been called for the first
 /// time. A [HookRestorableProperty] may also be unregistered from a
 /// [RestorationMixin] before the owning [State] object is disposed by calling
 /// [RestorationMixin.unregisterFromRestoration]. This is uncommon, though, and
@@ -72,10 +73,9 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 ///
 /// See also:
 ///
-///  * [RestorableValue], which is a [HookRestorableProperty] that makes the wrapped
+///  * [HookRestorableValue], which is a [HookRestorableProperty] that makes the wrapped
 ///    value accessible to the owning [State] object via a `value`
 ///    getter and setter.
-///  * [RestorationMixin], to which a [HookRestorableProperty] must be registered.
 ///  * [RestorationManager], which describes how state restoration works in
 ///    Flutter.
 abstract class HookRestorableProperty<T> extends ChangeNotifier {
@@ -203,20 +203,22 @@ typedef RegisterForRestoration = void Function(
 typedef RestoreState = void Function(
   RestorationBucket? oldBucket,
   bool initialRestore,
-  RegisterForRestoration registerForRestoration,
+  HookRestoration restoration,
 );
 
-RegisterForRestoration useStateRestoration(
+
+
+HookRestoration useStateRestoration(
     {required String restorationId, required RestoreState restoreState}) {
   return use(StateRestorationHook(
       restoreState: restoreState, restorationId: restorationId));
 }
 
-class StateRestorationHook extends Hook<RegisterForRestoration> {
+class StateRestorationHook extends Hook<HookRestoration> {
   final void Function(
     RestorationBucket? oldBucket,
     bool initialRestore,
-    RegisterForRestoration registerForRestoration,
+      HookRestoration registerForRestoration,
   ) restoreState;
 
   /// Called when [bucket] switches between null and non-null values.
@@ -245,12 +247,12 @@ class StateRestorationHook extends Hook<RegisterForRestoration> {
       this.didToggleBucket});
 
   @override
-  HookState<RegisterForRestoration, StateRestorationHook> createState() =>
+  HookState<HookRestoration, StateRestorationHook> createState() =>
       StateRestorationHookState();
 }
 
 class StateRestorationHookState
-    extends HookState<RegisterForRestoration, StateRestorationHook> {
+    extends HookState<HookRestoration, StateRestorationHook> implements HookRestoration {
   /// The [RestorationBucket] used for the restoration data of the
   /// [HookRestorableProperty]s registered to this mixin.
   ///
@@ -399,7 +401,7 @@ class StateRestorationHookState
 
   /// Must be called when the value returned by [restorationId] changes.
   ///
-  /// This method is automatically called from [didUpdateWidget]. Therefore,
+  /// This method is automatically called from [didUpdateHook]. Therefore,
   /// manually invoking this method may be omitted when the change in
   /// [restorationId] was caused by an updated widget.
   @protected
@@ -432,7 +434,7 @@ class StateRestorationHookState
       return true;
     }());
 
-    hook.restoreState(oldBucket, _firstRestorePending, registerForRestoration);
+    hook.restoreState(oldBucket, _firstRestorePending, this);
     _firstRestorePending = false;
 
     assert(() {
@@ -539,9 +541,7 @@ class StateRestorationHookState
   void initHook() {}
 
   @override
-  RegisterForRestoration build(BuildContext context) {
-    didUpdateRestorationId();
-
+  HookRestoration build(BuildContext context) {
     final RestorationBucket? oldBucket = _bucket;
     final bool needsRestore = restorePending;
     _currentParent = RestorationScope.maybeOf(context);
@@ -557,6 +557,71 @@ class StateRestorationHookState
       oldBucket?.dispose();
     }
 
-    return registerForRestoration;
+    return this;
   }
+
+  /// Unregisters a [HookRestorableProperty] from state restoration.
+  ///
+  /// The value of the `property` is removed from the restoration data and it
+  /// will not be restored if that data is used in a future state restoration.
+  ///
+  /// Calling this method is uncommon, but may be necessary if the data of a
+  /// [HookRestorableProperty] is only relevant when the [State] object is in a
+  /// certain state. When the data of a property is no longer necessary to
+  /// restore the internal state of a [State] object, it may be removed from the
+  /// restoration data by calling this method.
+  @protected
+  void unregisterFromRestoration(HookRestorableProperty<Object?> property) {
+    assert(property._owner == this);
+    _bucket?.remove<Object?>(property._restorationId!);
+    _unregister(property);
+  }
+}
+
+abstract class HookRestoration {
+
+  /// Unregisters a [HookRestorableProperty] from state restoration.
+  ///
+  /// The value of the `property` is removed from the restoration data and it
+  /// will not be restored if that data is used in a future state restoration.
+  ///
+  /// Calling this method is uncommon, but may be necessary if the data of a
+  /// [HookRestorableProperty] is only relevant when the [State] object is in a
+  /// certain state. When the data of a property is no longer necessary to
+  /// restore the internal state of a [State] object, it may be removed from the
+  /// restoration data by calling this method.
+  void unregisterFromRestoration(HookRestorableProperty<Object?> property);
+
+  /// Registers a [HookRestorableProperty] for state restoration.
+  ///
+  /// The registration associates the provided `property` with the provided
+  /// `restorationId`. If restoration data is available for the provided
+  /// `restorationId`, the property's value is restored to the value described
+  /// by the restoration data. If no restoration data is available, the property
+  /// will be initialized to a property-specific default value.
+  ///
+  /// Each property within a [State] object must be registered under a unique
+  /// ID. Only registered properties will have their values restored during
+  /// state restoration.
+  ///
+  /// Typically, this method is called from within [restoreState] to register
+  /// all restorable properties of the owning [State] object. However, if a
+  /// given [HookRestorableProperty] is only needed when certain conditions are met
+  /// within the [State], [registerForRestoration] may also be called at any
+  /// time after [restoreState] has been invoked for the first time.
+  ///
+  /// A property that has been registered outside of [restoreState] must be
+  /// re-registered within [restoreState] the next time that method is called
+  /// unless it has been unregistered with [unregisterFromRestoration].
+  void registerForRestoration(
+      HookRestorableProperty<Object?> property, String restorationId);
+
+  /// Must be called when the value returned by [restorationId] changes.
+  ///
+  /// This method is automatically called from [didUpdateHook]. Therefore,
+  /// manually invoking this method may be omitted when the change in
+  /// [restorationId] was caused by an updated widget.
+  void didUpdateRestorationId();
+
+
 }

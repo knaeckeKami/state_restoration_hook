@@ -50,8 +50,8 @@ class MyHomePage extends HookWidget {
 
     useStateRestoration(
         restorationId: 'MyHomePage',
-        restoreState: (oldBucket, initial, registerForRestoration) {
-          registerForRestoration(counter, "counter");
+        restoreState: (oldBucket, initial, restore) {
+          restore.registerForRestoration(counter, "counter");
 
           if (initial && counter.value != 0) {
             WidgetsBinding.instance.addPostFrameCallback(

@@ -113,7 +113,7 @@ class _HookRestorablePrimitiveValue<T extends Object>
 ///
 /// See also:
 ///
-///  * [RestorableNumN] for the nullable version of this class.
+///  * [HookRestorableNumN] for the nullable version of this class.
 class HookRestorableNum<T extends num>
     extends _HookRestorablePrimitiveValue<T> {
   /// Creates a [RestorableNum].
@@ -131,7 +131,7 @@ class HookRestorableNum<T extends num>
 ///
 /// See also:
 ///
-///  * [RestorableDoubleN] for the nullable version of this class.
+///  * [HookRestorableDoubleN] for the nullable version of this class.
 class HookRestorableDouble extends HookRestorableNum<double> {
   /// Creates a [RestorableDouble].
   ///
@@ -145,7 +145,7 @@ class HookRestorableDouble extends HookRestorableNum<double> {
 ///
 /// See also:
 ///
-///  * [RestorableIntN] for the nullable version of this class.
+///  * [HookRestorableIntN] for the nullable version of this class.
 class HookRestorableInt extends HookRestorableNum<int> {
   /// Creates a [RestorableInt].
   ///
@@ -159,7 +159,7 @@ class HookRestorableInt extends HookRestorableNum<int> {
 ///
 /// See also:
 ///
-///  * [RestorableStringN] for the nullable version of this class.
+///  * [HookRestorableStringN] for the nullable version of this class.
 class HookRestorableString extends _HookRestorablePrimitiveValue<String> {
   /// Creates a [RestorableString].
   ///
@@ -173,7 +173,7 @@ class HookRestorableString extends _HookRestorablePrimitiveValue<String> {
 ///
 /// See also:
 ///
-///  * [RestorableBoolN] for the nullable version of this class.
+///  * [HookRestorableBoolN] for the nullable version of this class.
 class HookRestorableBool extends _HookRestorablePrimitiveValue<bool> {
   /// Creates a [RestorableBool].
   ///
@@ -392,7 +392,7 @@ abstract class HookRestorableChangeNotifier<T extends ChangeNotifier> extends Ho
   }
 }
 
-/// A [RestorableProperty] that knows how to store and restore a
+/// A [HookRestorableProperty] that knows how to store and restore a
 /// [TextEditingController].
 ///
 /// The [TextEditingController] is accessible via the [value] getter. During
@@ -433,7 +433,7 @@ class HookRestorableTextEditingController extends HookRestorableChangeNotifier<T
   }
 }
 
-/// A [RestorableProperty] that knows how to store and restore a nullable [Enum]
+/// A [HookRestorableProperty] that knows how to store and restore a nullable [Enum]
 /// type.
 ///
 /// {@macro flutter.widgets.RestorableNum}
@@ -443,11 +443,11 @@ class HookRestorableTextEditingController extends HookRestorableChangeNotifier<T
 ///
 /// The represented value is accessible via the [value] getter. The set of
 /// values in the enum are accessible via the [values] getter. Since
-/// [RestorableEnumN] allows null, this set will include null.
+/// [HookRestorableEnumN] allows null, this set will include null.
 ///
 /// See also:
 ///
-/// * [RestorableEnum], a class similar to this one that knows how to store and
+/// * [HookRestorableEnum], a class similar to this one that knows how to store and
 ///   restore non-nullable [Enum] types.
 class HookRestorableEnumN<T extends Enum> extends HookRestorableValue<T?> {
   /// Creates a [RestorableEnumN].
@@ -524,7 +524,7 @@ class HookRestorableEnumN<T extends Enum> extends HookRestorableValue<T?> {
 }
 
 
-/// A [RestorableProperty] that knows how to store and restore an [Enum]
+/// A [HookRestorableProperty] that knows how to store and restore an [Enum]
 /// type.
 ///
 /// {@macro flutter.widgets.RestorableNum}
@@ -536,12 +536,10 @@ class HookRestorableEnumN<T extends Enum> extends HookRestorableValue<T?> {
 ///
 /// See also:
 ///
-/// * [RestorableEnumN], a class similar to this one that knows how to store and
+/// * [HookRestorableEnumN], a class similar to this one that knows how to store and
 ///   restore nullable [Enum] types.
 class HookRestorableEnum<T extends Enum> extends HookRestorableValue<T> {
   /// Creates a [RestorableEnum].
-  ///
-  /// {@macro flutter.widgets.RestorableNum.constructor}
   HookRestorableEnum(T defaultValue, { required Iterable<T> values })
       : assert(values.contains(defaultValue),
   'Default value $defaultValue not found in $T values: $values'),
@@ -562,7 +560,7 @@ class HookRestorableEnum<T extends Enum> extends HookRestorableValue<T> {
     super.value = newValue;
   }
 
-  /// The set of values that this [RestorableEnum] may represent.
+  /// The set of values that this [HookRestorableEnum] may represent.
   ///
   /// This is a required field that supplies the possible enum values that can
   /// be serialized and restored.
@@ -571,15 +569,6 @@ class HookRestorableEnum<T extends Enum> extends HookRestorableValue<T> {
   /// assert when restoring.
   ///
   /// It is typically set to the `values` list of the enum type.
-  ///
-  /// {@tool snippet} For example, to create a [RestorableEnum] with an
-  /// [AxisDirection] enum value, with a default value of [AxisDirection.up],
-  /// you would build it like the code below:
-  ///
-  /// ```dart
-  /// RestorableEnum<AxisDirection> axis = RestorableEnum<AxisDirection>(AxisDirection.up, values: AxisDirection.values);
-  /// ```
-  /// {@end-tool}
   Set<T> values;
 
   @override

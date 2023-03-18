@@ -2,6 +2,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:state_restoration_hook/src/state_restoration_hook.dart';
 
+/// A [Hook] that creates a [RestorableProperty].
+/// changes to the [RestorableProperty] will trigger a rebuild.
 T useRestorableProperty<T extends HookRestorableProperty<Object?>>(T Function() create) {
   return use(HookRestorablePropertyHook<T>(create));
 }
