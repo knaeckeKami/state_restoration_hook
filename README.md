@@ -2,6 +2,17 @@
 
 Experimental hook for state restoration.
 
+The goal of this package is port the core functionality of RestorationMixin to Flutter Hooks.
+
+This is done using two hooks:
+
+  * `useStateRestoration` - this hook is used to define the restoration id, and to get the restoreState() callback. 
+    The `restoreState()` callback is similar to overriding the `RestorationMixin.restoreState()` method.
+  * `useRestorableProperty` - to create restorable values. 
+
+Typically, you would first create your restorable properties using `useRestorableProperty` and then register
+them in the `restoreState` callback of `useStateRestoration`.
+
 ## Usage
 
 Use the `useRestorableProperty` to create restorable state:
@@ -64,21 +75,23 @@ Flutter specific:
 
   * `HookRestorableTextEditingController` for restoring a `TextEditingController`, useful for forms
 
-
 ### Custom HookRestorableProperty
 
 You can create your own `HookRestorableProperty` by extending the `HookRestorableProperty` class.
 
 Consider subclassing `HookRestorableValue` if you want to restore a single value / data object.
 
-If you want to restore a Listenable or ChangeNotifier, consider extending `HookRestorableListenable` or `HookRestorableChangeNotifier` respectively.
-
+If you want to restore a Listenable or ChangeNotifier, consider 
+extending `HookRestorableListenable` or `HookRestorableChangeNotifier` respectively.
 
 ## Caveats
 
 Please be aware the State Restoration is NOT meant to be used for storing large amounts of data and
-not meant to be a replacement for persistence solutions like sqlite, Shared Preferences, Hive or Isar. It is meant to restore the state of the UI after
-the app has been killed by the OS. You should only persist the minimal amount of data necessary (e.g. the ID of the currently displayed item, then 
+not meant to be a replacement for persistence solutions like sqlite, Shared Preferences, Hive or 
+Isar. 
+It is meant to restore the state of the UI after
+the app has been killed by the OS. You should only persist the minimal amount of data necessary 
+(e.g. the ID of the currently displayed item, then 
 re-fetch the data from the server or local database after state restoration).
 
 If the user manually kills the app, the state restoration will not be able to restore the state.

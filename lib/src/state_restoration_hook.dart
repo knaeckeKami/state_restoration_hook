@@ -298,6 +298,7 @@ class StateRestorationHookState
   /// A property that has been registered outside of [restoreState] must be
   /// re-registered within [restoreState] the next time that method is called
   /// unless it has been unregistered with [unregisterFromRestoration].
+  @override
   @protected
   void registerForRestoration(
       HookRestorableProperty<Object?> property, String restorationId) {
@@ -404,6 +405,7 @@ class StateRestorationHookState
   /// This method is automatically called from [didUpdateHook]. Therefore,
   /// manually invoking this method may be omitted when the change in
   /// [restorationId] was caused by an updated widget.
+  @override
   @protected
   void didUpdateRestorationId() {
     // There's nothing to do if:
@@ -570,6 +572,7 @@ class StateRestorationHookState
   /// certain state. When the data of a property is no longer necessary to
   /// restore the internal state of a [State] object, it may be removed from the
   /// restoration data by calling this method.
+  @override
   @protected
   void unregisterFromRestoration(HookRestorableProperty<Object?> property) {
     assert(property._owner == this);
